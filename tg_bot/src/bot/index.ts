@@ -5,17 +5,6 @@ import { bot } from "@/bot/index";
 
 export const runtime = "nodejs";
 
-let initialized = false;
-
-async function ensureBotInitialized() {
-  if (initialized) return;
-
-  await bot.init();
-  initialized = true;
-
-  console.log("Telegram bot initialized");
-}
-
 export async function POST(request: NextRequest) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
 
@@ -26,9 +15,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (
-    request.headers.get("x-telegram-bot-api-secret-token") !== secret
-  ) {
+  const receivedSecret = request.headers.get(
+    "x-telegram-bot-api-secret-token"
+  );
+
+  if (receivedSecret !== secret) {
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401 }
@@ -36,7 +27,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await ensureBotInitialized();
+    // grammY requires botInfo to be initialized before handleUpdate().
+    await bot.init();
+
+    console.log("Telegram bot initialized");
 
     const update = await request.json();
 
