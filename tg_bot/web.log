@@ -1,0 +1,101 @@
+   ▲ Next.js 15.5.25
+   - Local:        http://localhost:3000
+   - Network:      http://10.0.85.1:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 7s
+ ○ Compiling /api/health ...
+ ✓ Compiled /api/health in 1339ms (299 modules)
+ GET /api/health 200 in 2037ms
+ ✓ Compiled in 211ms (104 modules)
+ GET /api/health 200 in 92ms
+ GET /api/health 200 in 17ms
+ ○ Compiling /admin/clients ...
+ GET /admin/clients 307 in 2967ms
+ ✓ Compiled /login in 307ms (609 modules)
+ GET /login 200 in 602ms
+ ✓ Compiled /admin in 359ms (612 modules)
+ GET /admin 200 in 604ms
+ POST /login 303 in 674ms
+ ✓ Compiled /admin/bookings in 494ms (617 modules)
+ GET /admin/bookings 200 in 628ms
+ ○ Compiling /admin/schedule ...
+ ✓ Compiled /admin/schedule in 1002ms (638 modules)
+ GET /admin/schedule 200 in 1371ms
+ GET /admin/schedule 200 in 108ms
+ ○ Compiling /admin/masters ...
+ ✓ Compiled /admin/masters in 595ms (641 modules)
+ GET /admin/masters 200 in 745ms
+ GET /admin/clients 200 in 53ms
+ GET /admin/masters 200 in 44ms
+ GET /admin/schedule?master=demo-master 200 in 146ms
+ GET /admin/bookings 200 in 78ms
+ POST /admin/bookings 200 in 39ms
+ POST /admin/bookings 200 in 30ms
+ POST /admin/bookings 200 in 32ms
+ POST /admin/bookings 200 in 28ms
+ POST /admin/bookings 200 in 29ms
+ POST /admin/bookings 200 in 28ms
+ GET /admin/bookings 200 in 333ms
+ GET /admin/bookings 200 in 124ms
+ POST /admin/bookings 200 in 36ms
+ POST /admin/bookings 200 in 27ms
+ POST /admin/bookings 200 in 25ms
+ POST /admin/bookings 200 in 28ms
+ POST /admin/bookings 200 in 30ms
+ POST /admin/bookings 200 in 26ms
+ POST /admin/bookings 200 in 29ms
+ POST /admin/bookings 200 in 26ms
+ POST /admin/bookings 200 in 26ms
+ POST /admin/bookings 200 in 28ms
+ POST /admin/bookings 200 in 33ms
+ POST /admin/bookings 200 in 26ms
+ GET /admin 200 in 61ms
+ GET /admin/bookings 200 in 57ms
+ GET /admin 200 in 60ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 5.7s (917 modules)
+ GET /admin 500 in 10092ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1077ms (916 modules)
+ GET /admin 404 in 1385ms
+ GET /admin 404 in 40ms
+ GET /admin 404 in 32ms
+ GET /admin 404 in 35ms
+ GET /admin 404 in 37ms
+ GET /admin 404 in 58ms
+ GET /admin 404 in 31ms
+ GET /admin 404 in 209ms
+ ✓ Compiled in 600ms (916 modules)
+ GET /admin 404 in 793ms
+ GET /admin 404 in 49ms
+ GET /admin 404 in 252ms
+ ✓ Compiled in 571ms (908 modules)
+ GET /admin 404 in 683ms
+ GET /admin 404 in 36ms
+ GET /admin 404 in 124ms
+ ✓ Compiled in 570ms (908 modules)
+ GET /admin 404 in 649ms
+ GET /admin 404 in 31ms
+ GET /admin 404 in 114ms
+ ✓ Compiled in 594ms (908 modules)
+ GET /admin 404 in 673ms
+ GET /admin 404 in 34ms
+ GET /admin 404 in 140ms
+ ✓ Compiled in 135ms (503 modules)
+ ✓ Compiled in 460ms (873 modules)
+ GET /admin 404 in 711ms
+ GET /admin 404 in 25ms
+ GET /admin 404 in 204ms
+ ✓ Compiled in 417ms (777 modules)
+ ✓ Compiled /_error in 286ms (873 modules)
+   Reload env: .env
+ ✓ Compiled in 208ms (473 modules)
+ ✓ Compiled in 277ms (473 modules)
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3286), routine: Some("ProcessInterrupts") }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3286), routine: Some("ProcessInterrupts") }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3286), routine: Some("ProcessInterrupts") }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3286), routine: Some("ProcessInterrupts") }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3286), routine: Some("ProcessInterrupts") }) }
+ ✓ Compiled in 230ms (473 modules)
