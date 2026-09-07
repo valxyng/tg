@@ -1,0 +1,7 @@
+# pnpm 11 blocks transitive lifecycle scripts unless explicitly allowed.
+# These packages need platform-specific Prisma engines / esbuild binaries.
+allowBuilds:
+  "@prisma/client": true
+  "@prisma/engines": true
+  "esbuild": true
+  "prisma": true
