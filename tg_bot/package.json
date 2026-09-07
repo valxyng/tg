@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+   "start": "node .next/standalone/server.js",
     "bot": "tsx src/bot/index.ts",
     "bot:watch": "tsx watch src/bot/index.ts",
     "reminders": "tsx src/jobs/reminders.ts",
