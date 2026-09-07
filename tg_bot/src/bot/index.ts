@@ -7,19 +7,19 @@ import { money, settings } from "../lib/settings";
 import { registerAdmin } from "./admin";
 
 export const bot = new Bot(
-  process.env.TELEGRAM_BOT_TOKEN || "not-configured",
-  {
-    botInfo: {
-      id: 8856644114,
-      is_bot: true,
-      first_name: "Лапуня | Груминг Саратов",
-      username: "LapunyaGroomBot",
-      can_join_groups: true,
-      can_read_all_group_messages: false,
-      supports_inline_queries: false,
-    },
-  }
+  process.env.TELEGRAM_BOT_TOKEN || "not-configured"
 );
+
+let botInitialized = false;
+
+export async function initBot() {
+  if (botInitialized) return;
+
+  await bot.init();
+  botInitialized = true;
+
+  console.log(`Telegram bot initialized: @${bot.botInfo.username}`);
+}
 type Flow = { petId?: string; categoryId?: string; serviceId?: string; masterId?: string; date?: string; minutes?: number; editPetId?: string; name?: string; species?: string };
 /** ADMIN_TELEGRAM_ID remains supported; ADMIN_TELEGRAM_IDS accepts a comma-separated allow-list. */
 const ownerIds = () => [...new Set([process.env.ADMIN_TELEGRAM_ID, ...(process.env.ADMIN_TELEGRAM_IDS ?? "").split(",")]
