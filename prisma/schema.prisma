@@ -36,6 +36,8 @@ model User {
   firstName String?
   lastName String?
   phone String?
+  profileCompleted Boolean @default(false)
+  isBlocked Boolean @default(false)
   role UserRole @default(USER)
   pets Pet[]
   bookings Booking[] @relation("ClientBookings")
