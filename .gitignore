@@ -1,0 +1,10 @@
+node_modules
+.pnpm-store
+.next
+.env
+.env.local
+.env.production
+.env.*.local
+*.log
+*.tsbuildinfo
+prisma/*.db
