@@ -1,5 +1,6 @@
 import "dotenv/config";
-import { Bot, Context, InlineKeyboard, Keyboard } from "grammy";
+import { Bot, Context, InlineKeyboard, InputFile, Keyboard } from "grammy";
+import path from "node:path";
 import { prisma } from "../lib/db";
 import { availableSlots, createBooking, SlotTakenError } from "../services/availability";
 import { clock, dateInZone, studioDateTime } from "../lib/time";
@@ -98,7 +99,7 @@ bot.hears("✂️ Услуги", async ctx => { await current(ctx); const list=a
 bot.hears(["🐶 Мои питомцы", "🐾 Мои питомцы"], async ctx => { const u=await current(ctx); if (!u.profileCompleted) return void promptRegistration(ctx); await petsList(ctx, u.id); });
 bot.hears("👤 Мой профиль", async ctx => { const u=await current(ctx); if (!u.profileCompleted) return void promptRegistration(ctx); await profile(ctx, u.id); });
 bot.hears("📋 Мои записи", async ctx => { const u=await current(ctx); if (!u.profileCompleted) return void promptRegistration(ctx); const rows=await prisma.booking.findMany({where:{clientId:u.id,startsAt:{gte:new Date()},status:{in:["PENDING","CONFIRMED"]}},include:{pet:true,service:true,master:true},orderBy:{startsAt:"asc"}}); const kb=new InlineKeyboard(); rows.forEach(b=>kb.text(`❌ Отменить ${b.pet.name} · ${b.startsAt.toLocaleDateString("ru-RU")}`,`b:x:${b.id}`).row()); await ctx.reply(rows.length?rows.map(b=>`${speciesLabel(b.pet.species)} ${b.pet.name}\n✂️ ${b.service.name}\n👩 ${b.master.name}\n📅 ${b.startsAt.toLocaleString("ru-RU")}`).join("\n\n"):"Предстоящих записей нет.",{reply_markup:kb}); });
-bot.hears("📍 Где мы находимся", async ctx=>{const c=await settings(); const kb=new InlineKeyboard();if(c.mapUrl)kb.url("🗺 Открыть карту",c.mapUrl);await ctx.reply(`📍 ${c.name}\n${c.address}\n${c.directions||""}`,{reply_markup:kb});});
+bot.hears("📍 Где мы находимся", async ctx=>{const c=await settings(); const kb=new InlineKeyboard();if(c.mapUrl)kb.url("🗺 Открыть карту",c.mapUrl);await ctx.reply(`📍 ${c.name}\n${c.address}\n${c.directions||""}`,{reply_markup:kb});await ctx.replyWithVideo(new InputFile(path.join(process.cwd(),"assets","videos","how-to-get.mp4")),{caption:"🎥 Как нас найти"});});
 bot.hears("💬 Связаться с администратором",async ctx=>{const c=await settings(); await ctx.reply(c.adminUsername?`Напишите администратору: @${c.adminUsername.replace("@","")}`:c.phone?`Телефон: ${c.phone}`:"Контакты скоро появятся.");});
 
 bot.callbackQuery(/^b:(.+)$/, async ctx => { const u=await current(ctx), [kind,...rest]=ctx.match[1].split(":"); const value=rest.join(":"); const row=await prisma.botFlow.findUnique({where:{userId:u.id}}); const f=(row?.payload??{}) as Flow; await ctx.answerCallbackQuery();
