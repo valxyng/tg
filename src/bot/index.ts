@@ -22,7 +22,7 @@ const ownerIds = () => [...new Set([process.env.ADMIN_TELEGRAM_ID, ...(process.e
   .map(value => BigInt(value.trim()).toString()))];
 const ownerId = () => ownerIds()[0] ? BigInt(ownerIds()[0]) : null;
 const isOwner = (ctx: Context) => !!ctx.from && ownerIds().includes(BigInt(ctx.from.id).toString());
-const main = (admin = false) => { const keyboard = new Keyboard().text("📅 Записаться").text("💰 Прайс").row().text("✂️ Услуги").text("🐾 Мои питомцы").row().text("👤 Мой профиль").text("📋 Мои записи").row().text("📍 Где мы находимся").text("💬 Связаться с администратором"); if (admin) keyboard.row().text("⚙️ Админ-панель"); return keyboard.resized(); };
+const main = (admin = false) => { const keyboard = new Keyboard().text("📅 Записаться").text("💰 Прайс").row().text("✂️ Услуги").text("🐾 Мои питомцы").row().text("📋 Мои записи").row().text("📍 Где мы находимся").text("💬 Связаться с администратором"); if (admin) keyboard.row().text("⚙️ Админ-панель"); return keyboard.resized(); };
 async function current(ctx: Context) {
   if (!ctx.from) throw new Error("Telegram user missing");
   return prisma.user.upsert({ where: { telegramId: BigInt(ctx.from.id) }, update: { username: ctx.from.username, firstName: ctx.from.first_name, lastName: ctx.from.last_name }, create: { telegramId: BigInt(ctx.from.id), username: ctx.from.username, firstName: ctx.from.first_name, lastName: ctx.from.last_name } });
