@@ -1,4 +1,5 @@
 import { Bot, Context, InlineKeyboard, Keyboard } from "grammy";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/db";
 import { clock, dateInZone, studioDateTime } from "../lib/time";
 import { money, settings } from "../lib/settings";
@@ -6,7 +7,7 @@ import { availableSlots, createBooking, SlotTakenError } from "../services/avail
 
 type OwnerCheck = (ctx: Context) => boolean;
 type AdminFlow = Record<string, string>;
-const ACTIVE = ["PENDING", "CONFIRMED"] as const;
+const ACTIVE: Prisma.BookingStatus[] = ["PENDING", "CONFIRMED"];
 const label = (s: string) => ({ PENDING: "🟡 Ожидает", CONFIRMED: "🟢 Подтверждена", CANCELLED: "🔴 Отменена", COMPLETED: "⚪ Завершена", NO_SHOW: "⚫ Не пришёл" }[s] || s);
 const icon = (s: string) => s === "cat" ? "🐱" : "🐶";
 const date = (d: string, n: number) => { const x = new Date(`${d}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
