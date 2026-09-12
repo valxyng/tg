@@ -869,7 +869,10 @@ bot.hears(
 
 bot.hears(
   "✂️ Услуги",
-  async (ctx) => {
+  async (ctx, next) => {
+    // The same legacy reply-keyboard label is used by the admin panel.
+    // Let its dedicated handler render management controls for owners.
+    if (isOwner(ctx)) return next();
     await current(ctx);
 
     const list =
