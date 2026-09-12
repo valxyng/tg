@@ -31,7 +31,7 @@ export function registerAdmin(bot: Bot, isOwner: OwnerCheck, clientMenu: (admin?
   bot.hears("⚙️ Админ-панель", async ctx => { if (await guard(ctx)) await dashboard(ctx); });
   bot.hears("⬅️ В клиентское меню", async ctx => { if (await guard(ctx)) await ctx.reply("🐾 Клиентское меню", { reply_markup: clientMenu(true) }); });
   // Old Reply Keyboard labels remain safe entry points, but every new screen is inline-only.
-  bot.hears("📅 Расписание", async ctx => { if (await guard(ctx)) await masters(ctx, "ad:sch"); });
+  bot.hears("📅 Расписание", async ctx => { if (await guard(ctx)) await scheduleOverview(ctx, await today()); });
   bot.hears("📋 Записи", async ctx => { if (await guard(ctx)) await render(ctx, "📅 ЗАПИСИ", new InlineKeyboard().text("Сегодня", "ad:bookday:0").text("Завтра", "ad:bookday:1").row().text("Эта неделя", "ad:bookweek").text("📆 Другая дата", "ad:bookpick").row().text("⬅️ Назад", "ad:home")); });
   bot.hears("👥 Клиенты", async ctx => { if (await guard(ctx)) await render(ctx, "👥 КЛИЕНТЫ", new InlineKeyboard().text("Открыть клиентов", "ad:clients").row().text("🏠 Главная", "ad:home")); });
   bot.hears("🐶 Питомцы", async ctx => { if (await guard(ctx)) await render(ctx, "🐾 ПИТОМЦЫ", new InlineKeyboard().text("Открыть питомцев", "ad:pets").row().text("🏠 Главная", "ad:home")); });
