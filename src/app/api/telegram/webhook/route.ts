@@ -4,6 +4,15 @@ import { bot } from "@/bot/index";
 
 export const runtime = "nodejs";
 
+// Next.js loads this route without starting grammY's polling runner, so the
+// bot must be initialized explicitly before it can handle webhook updates.
+let botInitialization: Promise<void> | undefined;
+
+function initializeBot() {
+  botInitialization ??= bot.init();
+  return botInitialization;
+}
+
 export async function POST(request: NextRequest) {
   console.log("🔥 TELEGRAM WEBHOOK HIT");
 
@@ -36,6 +45,7 @@ export async function POST(request: NextRequest) {
 
     console.log("📩 Telegram update received:", update.update_id);
 
+    await initializeBot();
     await bot.handleUpdate(update);
 
     console.log("✅ Telegram update handled");
