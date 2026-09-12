@@ -780,7 +780,8 @@ bot.command(
     await clearFlow(u.id);
 
     if (!u.profileCompleted) {
-      return void promptRegistration(ctx);
+      await setFlow(u.id, "registration_phone");
+      return void await ctx.reply("📱 Добро пожаловать! Отправьте номер телефона, чтобы продолжить.", { reply_markup: phoneKeyboard() });
     }
 
     await ctx.reply(
