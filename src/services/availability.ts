@@ -4,6 +4,14 @@ import { settings } from "@/lib/settings";
 import { studioDateTime } from "@/lib/time";
 
 const ACTIVE: BookingStatus[] = ["PENDING", "CONFIRMED"];
+export async function servicePrice(masterId: string, serviceId: string) {
+  const link = await prisma.masterService.findUnique({
+    where: { masterId_serviceId: { masterId, serviceId } },
+    select: { priceKopecks: true, service: { select: { priceKopecks: true } } },
+  });
+  return link ? link.priceKopecks ?? link.service.priceKopecks : null;
+}
+
 export async function availableSlots(masterId: string, serviceId: string, date: string) {
   const [master, service, cfg] = await Promise.all([
     prisma.master.findFirst({ where: { id: masterId, isActive: true, isArchived: false }, include: { schedules: true, breaks: true, exceptions: true } }),
@@ -44,10 +52,11 @@ export async function createBooking(input: { clientId: string; petId: string; se
   return prisma.$transaction(async tx => {
     // Serializes booking attempts for a master without relying on an in-process lock.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.masterId}))`;
-    const [pet, service, master] = await Promise.all([
+    const [pet, service, master, masterService] = await Promise.all([
       tx.pet.findFirst({ where: { id: input.petId, ownerId: input.clientId, isArchived: false } }),
       tx.service.findFirst({ where: { id: input.serviceId, isActive: true, isArchived: false } }),
-      tx.master.findFirst({ where: { id: input.masterId, isActive: true, isArchived: false, services: { some: { serviceId: input.serviceId } } } })
+      tx.master.findFirst({ where: { id: input.masterId, isActive: true, isArchived: false, services: { some: { serviceId: input.serviceId } } } }),
+      tx.masterService.findUnique({ where: { masterId_serviceId: { masterId: input.masterId, serviceId: input.serviceId } }, select: { priceKopecks: true } }),
     ]);
     if (!pet || !service || !master || input.startsAt <= new Date()) throw new Error("Invalid booking data");
     // Callback data is untrusted: prove that the supplied instant is a generated slot.
@@ -59,7 +68,7 @@ export async function createBooking(input: { clientId: string; petId: string; se
     const collision = await tx.booking.findFirst({ where: { masterId: input.masterId, status: { in: ACTIVE }, startsAt: { lt: endsAt }, endsAt: { gt: input.startsAt } } })
       ?? await tx.blockedTime.findFirst({ where: { masterId: input.masterId, startsAt: { lt: endsAt }, endsAt: { gt: input.startsAt } } });
     if (collision) throw new SlotTakenError();
-    return tx.booking.create({ data: { ...input, endsAt, priceKopecks: service.priceKopecks }, include: { pet: true, service: true, master: true, client: true } });
+    return tx.booking.create({ data: { ...input, endsAt, priceKopecks: masterService?.priceKopecks ?? service.priceKopecks }, include: { pet: true, service: true, master: true, client: true } });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
 

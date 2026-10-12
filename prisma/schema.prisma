@@ -109,6 +109,7 @@ model Master {
 model MasterService {
   masterId String
   serviceId String
+  priceKopecks Int?
   master Master @relation(fields:[masterId], references:[id], onDelete: Cascade)
   service Service @relation(fields:[serviceId], references:[id], onDelete: Cascade)
   @@id([masterId, serviceId])

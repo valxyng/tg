@@ -7,6 +7,7 @@ import { prisma } from "../lib/db";
 import {
   availableSlots,
   createBooking,
+  servicePrice,
   SlotTakenError,
 } from "../services/availability";
 import { clock, dateInZone, studioDateTime } from "../lib/time";
@@ -54,6 +55,7 @@ type Flow = {
   name?: string;
   species?: string;
   phone?: string;
+  priceKopecks?: number;
 };
 
 /**
@@ -486,6 +488,16 @@ async function chooseCategory(
 
   const kb = new InlineKeyboard();
 
+  const lastBooking = await prisma.booking.findFirst({
+    where: { clientId: userId, status: { in: ["PENDING", "CONFIRMED", "COMPLETED", "NO_SHOW"] } },
+    orderBy: { createdAt: "desc" },
+    include: { service: true, master: true },
+  });
+
+  if (lastBooking) {
+    kb.text("🔁 Последняя услуга", "b:last").row();
+  }
+
   categories.forEach((x) => {
     kb.text(x.name, `b:c:${x.id}`).row();
   });
@@ -559,8 +571,8 @@ async function chooseMaster(
   userId: string,
   f: Flow,
 ) {
-  const masters =
-    await prisma.master.findMany({
+  const [masters, service] = await Promise.all([
+    prisma.master.findMany({
       where: {
         isActive: true,
         isArchived: false,
@@ -570,16 +582,19 @@ async function chooseMaster(
           },
         },
       },
+      include: { services: { where: { serviceId: f.serviceId }, select: { priceKopecks: true } } },
       orderBy: {
         name: "asc",
       },
-    });
+    }),
+    prisma.service.findUniqueOrThrow({ where: { id: f.serviceId! }, select: { priceKopecks: true } }),
+  ]);
 
   const kb = new InlineKeyboard();
 
   masters.forEach((x) => {
     kb.text(
-      `👩 ${x.name}`,
+      `👩 ${x.name} — ${money(x.services[0]?.priceKopecks ?? service.priceKopecks)}`,
       `b:m:${x.id}`,
     ).row();
   });
@@ -603,6 +618,7 @@ async function chooseDate(
   f: Flow,
 ) {
   const cfg = await settings();
+  const price = f.masterId && f.serviceId ? await servicePrice(f.masterId, f.serviceId) : null;
   const kb = new InlineKeyboard();
   const today = dateInZone(
     new Date(),
@@ -650,7 +666,7 @@ async function chooseDate(
   );
 
   await ctx.reply(
-    "Выберите дату:",
+    `Выберите дату:${price === null ? "" : `\n💰 Стоимость услуги: ${money(price, cfg.currency)}`}`,
     {
       reply_markup: kb,
     },
@@ -708,19 +724,13 @@ async function confirmation(
 ) {
   const [
     pet,
-    service,
     master,
     cfg,
+    price,
   ] = await Promise.all([
     prisma.pet.findUniqueOrThrow({
       where: {
         id: f.petId!,
-      },
-    }),
-
-    prisma.service.findUniqueOrThrow({
-      where: {
-        id: f.serviceId!,
       },
     }),
 
@@ -731,19 +741,21 @@ async function confirmation(
     }),
 
     settings(),
+    servicePrice(f.masterId!, f.serviceId!),
   ]);
+  const service = await prisma.service.findUniqueOrThrow({ where: { id: f.serviceId! } });
 
   await setFlow(
     userId,
     "confirm",
-    f,
+    { ...f, priceKopecks: price ?? service.priceKopecks },
   );
 
   await ctx.reply(
     `📋 ПРОВЕРЬТЕ ЗАПИСЬ\n\n🐶 ${pet.name}\n✂️ ${service.name}\n👩 ${master.name}\n📅 ${f.date}\n🕐 ${clock(
       f.minutes!,
     )}\n💰 ${money(
-      service.priceKopecks,
+      price ?? service.priceKopecks,
       cfg.currency,
     )}\n📍 ${
       cfg.address || "адрес уточняется"
@@ -835,6 +847,12 @@ bot.hears(
                 isActive: true,
                 isArchived: false,
               },
+              include: {
+                masterServices: {
+                  where: { master: { isActive: true, isArchived: false } },
+                  include: { master: true },
+                },
+              },
               orderBy: {
                 sortOrder: "asc",
               },
@@ -853,9 +871,9 @@ bot.hears(
             `<b>${c.name}</b>\n${c.services
               .map(
                 (s) =>
-                  `• ${s.name} — ${money(
-                    s.priceKopecks,
-                  )}`,
+                  `• ${s.name} — ${s.masterServices.length
+                    ? s.masterServices.map((x) => `${x.master.name}: ${money(x.priceKopecks ?? s.priceKopecks)}`).join(" · ")
+                    : money(s.priceKopecks)}`,
               )
               .join("\n")}`,
         )
@@ -885,6 +903,12 @@ bot.hears(
         orderBy: {
           sortOrder: "asc",
         },
+        include: {
+          masterServices: {
+            where: { master: { isActive: true, isArchived: false } },
+            include: { master: true },
+          },
+        },
       });
 
     await ctx.reply(
@@ -895,9 +919,9 @@ bot.hears(
               s.description || ""
             }\n⏱ ${
               s.durationMinutes
-            } мин. · 💰 ${money(
-              s.priceKopecks,
-            )}`,
+            } мин. · 💰 ${s.masterServices.length
+              ? s.masterServices.map((x) => `${x.master.name}: ${money(x.priceKopecks ?? s.priceKopecks)}`).join(" · ")
+              : money(s.priceKopecks)}`,
         )
         .join("\n\n") ||
         "Услуги пока заполняются.",
@@ -1371,6 +1395,45 @@ bot.callbackQuery(
       return;
     }
 
+    if (kind === "last") {
+      const previous = await prisma.booking.findFirst({
+        where: { clientId: u.id, status: { in: ["PENDING", "CONFIRMED", "COMPLETED", "NO_SHOW"] } },
+        orderBy: { createdAt: "desc" },
+        include: { service: true, master: true },
+      });
+      const pet = f.petId ? await prisma.pet.findFirst({ where: { id: f.petId, ownerId: u.id, isArchived: false } }) : null;
+      if (!previous || !pet) {
+        await choosePet(ctx, u.id);
+        return;
+      }
+      const service = await prisma.service.findFirst({
+        where: { id: previous.serviceId, isActive: true, isArchived: false, animalTypes: { has: pet.species } },
+      });
+      if (!service) {
+        await ctx.reply("Прежняя услуга больше недоступна. Выберите актуальную услугу:");
+        await chooseCategory(ctx, u.id, { petId: pet.id });
+        return;
+      }
+      const master = await prisma.master.findFirst({
+        where: { id: previous.masterId, isActive: true, isArchived: false, services: { some: { serviceId: service.id } } },
+      });
+      if (master) {
+        await chooseDate(ctx, u.id, { petId: pet.id, serviceId: service.id, masterId: master.id });
+        return;
+      }
+      const alternative = await prisma.master.findFirst({
+        where: { isActive: true, isArchived: false, services: { some: { serviceId: service.id } } },
+      });
+      if (alternative) {
+        await ctx.reply("Прежний мастер больше недоступен. Выберите мастера для этой услуги:");
+        await chooseMaster(ctx, u.id, { petId: pet.id, serviceId: service.id });
+      } else {
+        await ctx.reply("Прежняя услуга сейчас недоступна у мастеров. Выберите актуальную услугу:");
+        await chooseCategory(ctx, u.id, { petId: pet.id });
+      }
+      return;
+    }
+
     if (kind === "c") {
       await chooseService(
         ctx,
@@ -1437,6 +1500,16 @@ bot.callbackQuery(
     }
 
     if (kind === "ok") {
+      if (row?.state !== "confirm" || !f.petId || !f.serviceId || !f.masterId || !f.date || f.minutes === undefined) {
+        await ctx.reply("Эта запись уже обработана. Начните новую запись через меню.");
+        return;
+      }
+      const currentPrice = await servicePrice(f.masterId, f.serviceId) ?? (await prisma.service.findUniqueOrThrow({ where: { id: f.serviceId }, select: { priceKopecks: true } })).priceKopecks;
+      if (currentPrice !== f.priceKopecks) {
+        await confirmation(ctx, u.id, f);
+        await ctx.reply("Цена изменилась. Проверьте обновлённую стоимость перед подтверждением.");
+        return;
+      }
       try {
         const cfg =
           await settings();
@@ -1642,11 +1715,11 @@ bot.callbackQuery(
       } else if (
         row?.state === "master"
       ) {
-        await chooseService(
-          ctx,
-          u.id,
-          f,
-        );
+        if (f.categoryId) {
+          await chooseService(ctx, u.id, f);
+        } else {
+          await chooseCategory(ctx, u.id, { petId: f.petId });
+        }
       } else {
         await choosePet(
           ctx,
